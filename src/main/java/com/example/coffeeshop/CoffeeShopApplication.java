@@ -1,13 +1,11 @@
 package com.example.coffeeshop;
 
-import com.example.coffeeshop.entity.Product;
+import com.example.coffeeshop.service.ProductService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import com.example.coffeeshop.repository.ProductRepository;
-
-import java.math.BigDecimal;
 
 
 @SpringBootApplication
@@ -16,33 +14,10 @@ public class CoffeeShopApplication {
     public static void main(String[] args) {
         SpringApplication.run(CoffeeShopApplication.class, args);
     }
-
-    private void updateProduct(ProductRepository repository,String name,Long price,Integer discount,boolean active){
-        repository.findByName(name).ifPresentOrElse(product -> {
-            product.setPrice(price);
-            product.setDiscount(discount);
-            if(active) product.activate();
-            else product.deactivate();
-            repository.save(product);
-        },()->{
-            Product newProduct = new Product(name, price,discount);
-            if(active) newProduct.activate();
-            else newProduct.deactivate();
-            repository.save(newProduct);
-        });
-    }
-    private void initializeProduct(ProductRepository repository){
-        updateProduct(repository,"Cappuchino", 30000L,15,true);
-        updateProduct(repository,"Late", 20000L,10,true);
-        updateProduct(repository,"Burrito", 35000L,5,true);
-        updateProduct(repository,"Biar", 50000L,0,false);
-    }
-
     @Bean
-    CommandLineRunner testProductRepository(ProductRepository repository){
+    CommandLineRunner testProductRepository(ProductRepository repository, ProductService productService){
         return args -> {
-            initializeProduct(repository);
-            //repository.save(new Product("Cappuchino", 30000L,15));
+            productService.initializeProducts();
             System.out.println("Products count: " + repository.count());
             repository.findAll().forEach((product -> System.out.println(product.getStringForPrint())));
 
@@ -50,28 +25,38 @@ public class CoffeeShopApplication {
                     product -> System.out.println("Found "+product.getName()),
                     () -> System.out.println("product not found"));
 
+            productService.updateOrCreateProduct("Пиво Безалкагольное",50000L,0,6,true);
+
             repository.findById(4L).ifPresent(product -> {
                 product.activate();
                 product.setDiscount(100);
                 repository.save(product);
             });
-/*
-            repository.findById(2L).ifPresent((product -> {
-                product.deactivate();
-                repository.save(product);
-            }));
 
- */
-            repository.findAll().stream().
-                    filter(Product::getActive).
-                    findFirst().
-                    ifPresent(product -> {product.deactivate();repository.save(product);});
-            repository.findAll().forEach((product -> System.out.println(product.getStringForPrint())));
+            System.out.printf("%s %s %s %n","_".repeat(30),"findByActiveTrue","_".repeat(30));
             repository.findByActiveTrue().forEach(product -> System.out.println(product.getName()+" "+(product.getStringForPrint())));
-            System.out.println("_".repeat(80));
+
+            System.out.printf("%s %s %s %n","_".repeat(30),"findByDiscount","_".repeat(30));
             repository.findByDiscount(10).forEach(product -> System.out.println(product.getName()+" "+(product.getStringForPrint())));
-            System.out.println("_".repeat(80));
-            repository.findByActiveAndDiscount(false,15).forEach(product -> System.out.println(product.getName()+" "+(product.getStringForPrint())));
+
+            System.out.printf("%s %s %s %n","_".repeat(30),"findByActiveAndDiscount","_".repeat(30));
+            repository.findByActiveAndDiscount(true,15).forEach(product -> System.out.println(product.getName()+" "+(product.getStringForPrint())));
+
+            System.out.printf("%s %s %s %n","_".repeat(30),"findByCategoryId","_".repeat(30));
+            repository.findByCategoryId(4).forEach(product -> System.out.println(product.getName() )
+            );
+
+            System.out.printf("%s %s %s %n","_".repeat(30),"findByCategoryIdAndActiveTrue","_".repeat(30));
+            repository.findByCategoryIdAndActiveTrue(4).forEach(product -> System.out.printf("%s - %d%n",product.getName(),product.getPrice()));
+
+            System.out.printf("%s %s %s %n","_".repeat(30),"findByCategoryIdAndActiveTrueAndDiscountGreaterThen","_".repeat(30));
+            repository.findByCategoryIdAndActiveTrueAndDiscountGreaterThanEqual(4,10).
+                    forEach(product -> System.out.println(product.getStringForPrint()));
+
+            System.out.println("=".repeat(80));
+            repository.findByCategoryId(6).forEach(product -> System.out.println(product.getName()+" - "+product.getPrice()));
         };
+
+
     }
 }

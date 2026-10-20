@@ -10,4 +10,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByDiscount(Integer discount);
     List<Product> findByActiveAndDiscount(Boolean active,Integer discount);
     Optional<Product> findByName(String name);
+    List<Product> findByCategoryId(Integer categoryId);
+    List<Product> findByCategoryIdAndActiveTrue(Integer categoryId);
+    List<Product> findByCategoryIdAndActiveTrueAndDiscountGreaterThan(Integer categoryId, Integer discount);
+    List<Product> findByCategoryIdAndActiveTrueAndDiscountGreaterThanEqual(Integer categoryId, Integer discount);
 }

@@ -25,6 +25,8 @@ public class Product {
     private Integer discount;
 @Column(name = "active",nullable = false)
     private Boolean active;
+@Column(name = "category_id",nullable = false)
+    private Integer categoryId;
 
     public Long getId() {
         return id;
@@ -56,7 +58,7 @@ public class Product {
     protected Product() {
     }
 
-    public Product(String name, Long price, Integer discount) {
+    public Product(String name, Long price, Integer discount,Integer categoryId) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Product name must not be blank");
         }
@@ -66,12 +68,15 @@ public class Product {
         if (discount == null || discount < 0 || discount > 100) {
             throw new IllegalArgumentException("Product discount must be between 0 and 100");
         }
+        if (categoryId == null||categoryId<0) {
+            throw new IllegalArgumentException("Category mast be >= 0");
+        }
 
         this.name = name;
         this.price = price;
         this.discount = discount;
+        this.categoryId=categoryId;
         active=true;
-
     }
 
     public String getName() {
@@ -98,5 +103,16 @@ public class Product {
             throw new IllegalArgumentException("Discount mast be from 0 to 100");
         }
         this.discount = discount;
+    }
+
+    public Integer getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Integer categoryId) {
+        if(categoryId==null||categoryId<0){
+            throw new IllegalArgumentException("Category mast be >= 0");
+        }
+        this.categoryId = categoryId;
     }
 }
