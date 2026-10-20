@@ -24,7 +24,7 @@ public class Product {
 @Column(name = "discount",nullable = false)
     private Integer discount;
 @Column(name = "active",nullable = false)
-    private Boolean active;
+    private boolean active;
 @Column(name = "category_id",nullable = false)
     private Integer categoryId;
 

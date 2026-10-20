@@ -14,4 +14,5 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategoryIdAndActiveTrue(Integer categoryId);
     List<Product> findByCategoryIdAndActiveTrueAndDiscountGreaterThan(Integer categoryId, Integer discount);
     List<Product> findByCategoryIdAndActiveTrueAndDiscountGreaterThanEqual(Integer categoryId, Integer discount);
+    List<Product> findByActiveFalse();
 }

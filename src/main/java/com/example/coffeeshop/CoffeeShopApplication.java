@@ -12,10 +12,11 @@ import com.example.coffeeshop.repository.ProductRepository;
 public class CoffeeShopApplication {
 
     public static void main(String[] args) {
+
         SpringApplication.run(CoffeeShopApplication.class, args);
     }
     @Bean
-    CommandLineRunner testProductRepository(ProductRepository repository, ProductService productService){
+    CommandLineRunner testProductRepository(ProductRepository repository, ProductService productService,ConsoleMenu menu){
         return args -> {
             productService.initializeProducts();
             System.out.println("Products count: " + repository.count());
@@ -55,6 +56,12 @@ public class CoffeeShopApplication {
 
             System.out.println("=".repeat(80));
             repository.findByCategoryId(6).forEach(product -> System.out.println(product.getName()+" - "+product.getPrice()));
+
+            repository.findByActiveFalse().forEach(product -> System.out.println(product.getStringForPrint()));
+
+            menu.run();
+            System.out.println("END");
+
         };
 
 

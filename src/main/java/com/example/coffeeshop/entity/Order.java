@@ -20,32 +20,25 @@ public class Order {
     private Long durationSeconds;
     @Column(name = "deleted",nullable = false)
     private boolean deleted = false;
-
     public Long getId() {
         return id;
     }
-
     public OrderStatus getStatus() {
         return status;
     }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-
     public Long getDurationSeconds() {
         return durationSeconds;
     }
-
     public boolean isDeleted() {
         return deleted;
     }
-
     public Order() {
         status = OrderStatus.OPEN;
         createdAt = LocalDateTime.now();
         deleted = false;
-
     }
     public void completeOrder(){
         if(status==OrderStatus.INPROGRESS){
@@ -54,7 +47,6 @@ public class Order {
         }
         else throw new IllegalStateException("Cannot complete an inactive order");
     }
-
     public void cancelOrder(){
         if(status==OrderStatus.OPEN ){
             status = OrderStatus.CANCELLED;
@@ -71,5 +63,8 @@ public class Order {
             status=OrderStatus.INPROGRESS;
         }
         else throw new IllegalStateException("Only open orders can be accepted for processing");
+    }
+    public String StringForPrint(){
+        return String.valueOf(id)+": "+status+", "+createdAt;
     }
 }
