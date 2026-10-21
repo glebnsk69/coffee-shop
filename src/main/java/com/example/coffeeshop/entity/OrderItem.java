@@ -58,6 +58,6 @@ public class OrderItem {
         return quantity;
     }
     public String getStringForPrint(){
-        return String.valueOf(product.getId()7)+":"+getName()+" - "+getCost()+" " + getQuantity();
+        return String.valueOf(product.getId())+":"+getName()+" - "+getCost()+" " + getQuantity();
     }
 }

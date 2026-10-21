@@ -16,10 +16,11 @@ public class CoffeeShopApplication {
         SpringApplication.run(CoffeeShopApplication.class, args);
     }
     @Bean
-    CommandLineRunner testProductRepository(ProductRepository repository, ProductService productService,ConsoleMenu menu){
+//    CommandLineRunner testProductRepository(ProductRepository repository, ProductService productService){
+    CommandLineRunner testProductRepository( ProductService productService){
         return args -> {
             productService.initializeProducts();
-            System.out.println("Products count: " + repository.count());
+/*            System.out.println("Products count: " + repository.count());
             repository.findAll().forEach((product -> System.out.println(product.getStringForPrint())));
 
             repository.findById(1L).ifPresentOrElse(
@@ -58,9 +59,7 @@ public class CoffeeShopApplication {
             repository.findByCategoryId(6).forEach(product -> System.out.println(product.getName()+" - "+product.getPrice()));
 
             repository.findByActiveFalse().forEach(product -> System.out.println(product.getStringForPrint()));
-
-            menu.run();
-            System.out.println("END");
+*/
 
         };
 

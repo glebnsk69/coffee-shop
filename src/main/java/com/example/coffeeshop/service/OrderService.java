@@ -69,4 +69,21 @@ public class OrderService {
     public List<OrderItem> getOrderItems(Long orderId){
         return orderItemRepository.findByOrder_Id(orderId);
     }
+    @Transactional
+    public void startOrder(Long orderID){
+        orderRepository.findById(orderID).ifPresent(order -> order.startOrder());
+    }
+    @Transactional
+    public void completeOrder(Long orderId){
+        orderRepository.findById(orderId).ifPresent(order -> order.completeOrder());
+    }
+    @Transactional
+    public void cancelOrder(Long orderId){
+        orderRepository.findById(orderId).ifPresent(order -> order.cancelOrder());
+    }
+    @Transactional
+    public void deleteOrder(Long orderId){
+        orderRepository.findById(orderId).ifPresent(order -> order.deleteOrder());
+    }
+
 }

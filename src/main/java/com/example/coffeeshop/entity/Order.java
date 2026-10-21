@@ -65,6 +65,6 @@ public class Order {
         else throw new IllegalStateException("Only open orders can be accepted for processing");
     }
     public String StringForPrint(){
-        return String.valueOf(id)+": "+status+", "+createdAt;
+        return String.valueOf(id)+": "+status+", "+createdAt+((deleted==true)?"(удален)":"");
     }
 }

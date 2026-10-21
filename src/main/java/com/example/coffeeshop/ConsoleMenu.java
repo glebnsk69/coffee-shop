@@ -31,12 +31,12 @@ public class ConsoleMenu {
     enum CommandList {
         EXIT("Выход"),
         CREATEORDER("Создать заказ"),
+        SHOWORDERSLIST("Показать список заказов"),
         SHOWORDER("Показать заказ"),
         START("Начать обработку заказа"),
         END("Завершить заказ"),
         CANCEL("Отменить заказ"),
-        DELETE("Удалить заказ"),
-        SHOWORDERSLIST("Показать список заказов");
+        DELETE("Удалить заказ");
 
 
         private final String message;
@@ -78,13 +78,13 @@ public class ConsoleMenu {
         while (isRunning) {
             showMenu();
             switch (readCommand()) {
-                case START -> showMesssage("Начать обработку заказа");
-                case CANCEL -> System.out.println("Отменить заказ");
+                case START -> changeOrderStatus((long)readOrderId(),CommandList.START);
+                case CANCEL -> changeOrderStatus((long)readOrderId(),CommandList.CANCEL);
                 case CREATEORDER -> createOrder();
-                case DELETE -> System.out.println("Удалить заказ");
+                case DELETE -> changeOrderStatus((long)readOrderId(),CommandList.DELETE);
                 case SHOWORDER -> showOrder((long)readOrderId());
                 case SHOWORDERSLIST -> showOrderList();
-                case END -> System.out.println("Завершить заказ");
+                case END -> changeOrderStatus((long)readOrderId(),CommandList.END);
                 case EXIT -> isRunning=false;
             }
         }
@@ -182,5 +182,31 @@ public class ConsoleMenu {
         else showMesssage(order.get().StringForPrint());
 
         orderService.getOrderItems(orderID).forEach(orderItem -> System.out.println(orderItem.getStringForPrint()));
+    }
+
+    private void changeOrderStatus(Long orderID,CommandList status){
+        Optional<Order> order = orderService.findOrderById(orderID);
+        if(order.isEmpty()) {
+            System.out.println("Заказ не найден");
+            return;
+        }
+
+        if(order.get().isDeleted()) System.out.println("Заказ Удален.");
+        else {
+            showMesssage(order.get().StringForPrint());
+            try {
+                switch (status){
+                    case END -> orderService.completeOrder(orderID);
+                    case DELETE -> orderService.deleteOrder(orderID);
+                    case CANCEL -> orderService.cancelOrder(orderID);
+                    case START -> orderService.startOrder(orderID);
+                }
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Что то пошло не так",e);
+            }
+
+            showMesssage(order.get().StringForPrint());
+        }
+
     }
 }
