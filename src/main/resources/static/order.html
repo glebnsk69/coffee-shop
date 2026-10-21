@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Создание заказа</title>
+</head>
+<body>
+<h2>Создание заказа</h2>
+
+<div>
+    <label for="orderProduct">Товар:</label>
+    <select id="orderProduct"></select>
+
+    <label for="orderQuantity">Количество:</label>
+    <input id="orderQuantity" type="number" min="1" value="1">
+
+    <button id="addOrderItem">Добавить позицию</button>
+</div>
+
+<ul id="orderItems"></ul>
+
+<button id="createOrder" disabled>Создать заказ</button>
+
+<pre id="orderResult"></pre>
+<script>
+    const orderProductSelect = document.getElementById("orderProduct");
+
+    async function loadOrderProducts() {
+        try {
+            const response = await fetch("/api/products", {
+                headers: { "X-Role": roleSelect.value }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const products = await response.json();
+
+            orderProductSelect.replaceChildren();
+
+            for (const product of products) {
+                const option = document.createElement("option");
+                option.value = product.id;
+                option.textContent = `${product.name} — ${product.price}`;
+
+                orderProductSelect.appendChild(option);
+            }
+        } catch (error) {
+            message.textContent = `Ошибка загрузки товаров для заказа: ${error.message}`;
+        }
+    }
+
+    loadOrderProducts();
+
+</script>
+</body>
+</html>

@@ -4,6 +4,7 @@ import com.example.coffeeshop.dto.CreateOrderRequest;
 import com.example.coffeeshop.dto.OrderItemRequest;
 import com.example.coffeeshop.entity.Order;
 import com.example.coffeeshop.entity.OrderItem;
+import com.example.coffeeshop.entity.OrderStatus;
 import com.example.coffeeshop.entity.Product;
 import com.example.coffeeshop.repository.OrderItemRepository;
 import com.example.coffeeshop.repository.OrderRepository;
@@ -86,4 +87,22 @@ public class OrderService {
         orderRepository.findById(orderId).ifPresent(order -> order.deleteOrder());
     }
 
+    @Transactional
+    public void changeOrderStatus(Long orderId, OrderStatus newStatus) {
+        Order order = findOrderById(orderId).orElseThrow(() -> new IllegalArgumentException("Заказ не найден"));
+        switch (newStatus){
+            case INPROGRESS -> order.startOrder();
+            case COMPLETED -> order.completeOrder();
+            case CANCELLED -> order.cancelOrder();
+            default -> throw new IllegalArgumentException("Ошибка в статусе");
+
+        }
+        // 1. Найти заказ или выбросить исключение
+
+        // 2. В зависимости от newStatus:
+        // INPROGRESS -> order.startOrder()
+        // COMPLETED  -> order.completeOrder()
+        // CANCELLED  -> order.cancelOrder()
+        // Другие значения -> IllegalArgumentException
+    }
 }

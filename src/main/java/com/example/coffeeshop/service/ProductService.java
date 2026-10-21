@@ -5,6 +5,9 @@ import com.example.coffeeshop.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 public class ProductService {
     private final ProductRepository repository;
@@ -71,5 +74,11 @@ public class ProductService {
                     else newProduct.deactivate();
                     return repository.save(newProduct);
         });
+    }
+    public List<Product> getActiveProducts(){
+        return repository.findByActiveTrue();
+    }
+    public Optional<Product> findProductById(Long id){
+        return repository.findById(id);
     }
 }

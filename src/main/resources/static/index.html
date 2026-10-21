@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CoffeeShop — API Test</title>
+</head>
+<body>
+<h1>CoffeeShop — тестирование API</h1>
+<div style="border:solid;width=300px;height:50px;">
+<A href = http://localhost:8080/api/products>JSON Products</A><br>
+<A href = http://localhost:8080/api/products/2>Products id=2</A><br>
+</div>
+<label for="role">Роль:</label>
+<select id="role">
+    <option value="GUEST">GUEST</option>
+    <option value="CASHIER">CASHIER</option>
+    <option value="ADMIN">ADMIN</option>
+</select>
+
+<h2>Товары</h2>
+<button id="loadProducts">Загрузить товары</button>
+
+<p id="message"></p>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Название</th>
+        <th>Цена</th>
+        <th>Скидка</th>
+        <th>Активен</th>
+    </tr>
+    </thead>
+    <tbody id="products"></tbody>
+</table>
+
+
+<h2>Поиск товара по ID</h2>
+
+<input id="productId" type="number" min="1" placeholder="ID товара">
+<button id="findProduct">Найти</button>
+
+<pre id="productDetails"></pre>
+
+<h2>Создание заказа</h2>
+
+<div>
+    <label for="orderProduct">Товар:</label>
+    <select id="orderProduct"></select>
+
+    <label for="orderQuantity">Количество:</label>
+    <input id="orderQuantity" type="number" min="1" value="1">
+
+    <button id="addOrderItem">Добавить позицию</button>
+</div>
+
+<ul id="orderItems"></ul>
+
+<button id="createOrder" disabled>Создать заказ</button>
+
+<pre id="orderResult"></pre>
+
+
+<script>
+    const roleSelect = document.getElementById("role");
+    const loadButton = document.getElementById("loadProducts");
+    const productsTable = document.getElementById("products");
+    const message = document.getElementById("message");
+
+    loadButton.addEventListener("click", loadProducts);
+
+    async function loadProducts() {
+        message.textContent = "Загрузка...";
+        productsTable.replaceChildren();
+
+        try {
+            const response = await fetch("/api/products", {
+                headers: {
+                    "X-Role": roleSelect.value
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const products = await response.json();
+
+            for (const product of products) {
+                const row = document.createElement("tr");
+
+                for (const value of [
+                    product.id,
+                    product.name,
+                    product.price,
+                    product.discount,
+                    product.active
+                ]) {
+                    const cell = document.createElement("td");
+                    cell.textContent = value ?? "";
+                    row.appendChild(cell);
+                }
+
+                productsTable.appendChild(row);
+            }
+
+            message.textContent = `Загружено товаров: ${products.length}`;
+        } catch (error) {
+            message.textContent = `Ошибка: ${error.message}`;
+        }
+    }
+
+    const productIdInput = document.getElementById("productId");
+const findProductButton = document.getElementById("findProduct");
+const productDetails = document.getElementById("productDetails");
+
+findProductButton.addEventListener("click", findProduct);
+
+async function findProduct() {
+    const id = productIdInput.value.trim();
+
+    if (!id || !Number.isSafeInteger(Number(id)) || Number(id) <= 0) {
+        productDetails.textContent = "Введите корректный ID товара";
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/products/${id}`, {
+            headers: {
+                "X-Role": roleSelect.value
+            }
+        });
+
+        if (response.status === 404) {
+            productDetails.textContent = "Товар не найден";
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const product = await response.json();
+        productDetails.textContent = JSON.stringify(product, null, 2);
+    } catch (error) {
+        productDetails.textContent = `Ошибка: ${error.message}`;
+    }
+}
+
+    const orderProductSelect = document.getElementById("orderProduct");
+
+async function loadOrderProducts() {
+    try {
+        const response = await fetch("/api/products", {
+            headers: { "X-Role": roleSelect.value }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const products = await response.json();
+
+        orderProductSelect.replaceChildren();
+
+        for (const product of products) {
+            const option = document.createElement("option");
+            option.value = product.id;
+            option.textContent = `${product.name} — ${product.price}`;
+
+            orderProductSelect.appendChild(option);
+        }
+    } catch (error) {
+        message.textContent = `Ошибка загрузки товаров для заказа: ${error.message}`;
+    }
+}
+
+loadOrderProducts();
+
+
+</script>
+</body>
+</html>

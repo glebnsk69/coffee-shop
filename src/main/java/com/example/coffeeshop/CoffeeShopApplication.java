@@ -17,9 +17,10 @@ public class CoffeeShopApplication {
     }
     @Bean
 //    CommandLineRunner testProductRepository(ProductRepository repository, ProductService productService){
-    CommandLineRunner testProductRepository( ProductService productService){
+    CommandLineRunner testProductRepository( ProductService productService,ConsoleMenu menu){
         return args -> {
-            productService.initializeProducts();
+//            productService.initializeProducts();
+            menu.run();
 /*            System.out.println("Products count: " + repository.count());
             repository.findAll().forEach((product -> System.out.println(product.getStringForPrint())));
 
