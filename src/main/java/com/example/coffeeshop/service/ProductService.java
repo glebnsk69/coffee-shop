@@ -5,16 +5,43 @@ import com.example.coffeeshop.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ProductService {
     private final ProductRepository repository;
-
-    public ProductService(ProductRepository repository) {
+    private final ImageStorageService storageService;
+    public ProductService(ProductRepository repository,ImageStorageService storageService) {
+        this.storageService = storageService;
         this.repository = repository;
     }
+    /*
+    public ProductService(ProductRepository repository) {
+
+        this.repository = repository;
+        storageService=null;
+    }
+    */
+
+    @Transactional
+    public Product uploadProductImage(Long productId, byte[] imageBytes)
+            throws IOException {
+
+        Product product = repository.findById(productId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Product not found: " + productId
+                        )
+                );
+
+        String imagePath = storageService.saveImage(imageBytes);
+        product.setImagePath(imagePath);
+
+        return product;
+    }
+
     @Transactional
     public void initializeProducts(){
         updateOrCreateProduct("Эспрессо", 120L, 15, 1,true);
@@ -81,4 +108,52 @@ public class ProductService {
     public Optional<Product> findProductById(Long id){
         return repository.findById(id);
     }
+
+    public byte[] getProductImage(Long productId) throws IOException {
+        Product product = repository.findById(productId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Product not found: " + productId
+                        )
+                );
+
+        String imagePath = product.getImagePath();
+
+        if (imagePath == null || imagePath.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Product has no image: " + productId
+            );
+        }
+
+        return storageService.loadImage(imagePath);
+    }
+    public String getProductImageContentType(Long productId) {
+        Product product = repository.findById(productId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Product not found: " + productId)
+                );
+
+        String imagePath = product.getImagePath();
+
+        if (imagePath == null || imagePath.isBlank()) {
+            throw new IllegalArgumentException("Product has no image: " + productId);
+        }
+
+        return storageService.getContentType(imagePath);
+    }
+
+
+/*
+    @Transactional
+    public Product setProductImage(Long productId, String imagePath) {
+        Product product = repository.findById(productId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Product not found: " + productId)
+                );
+
+        product.setImagePath(imagePath);
+
+        return product;
+    }
+*/
 }

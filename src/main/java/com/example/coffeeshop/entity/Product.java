@@ -27,6 +27,8 @@ public class Product {
     private boolean active;
 @Column(name = "category_id",nullable = false)
     private Integer categoryId;
+@Column(name = "image_path")
+    private String imagePath;
 
     public Long getId() {
         return id;
@@ -114,5 +116,12 @@ public class Product {
             throw new IllegalArgumentException("Category mast be >= 0");
         }
         this.categoryId = categoryId;
+    }
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 }

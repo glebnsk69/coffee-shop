@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS products (
     discount INTEGER NOT NULL DEFAULT 0,
     active BOOLEAN NOT NULL DEFAULT TRUE,
     category_id INTEGER NOT NULL DEFAULT 0,
+    image_path VARCHAR(255) UNIQUE,
 
     CONSTRAINT chk_products_price CHECK (price >= 0),
     CONSTRAINT chk_products_discount CHECK (discount BETWEEN 0 AND 100)

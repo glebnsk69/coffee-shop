@@ -2,11 +2,14 @@ package com.example.coffeeshop.controller;
 
 import com.example.coffeeshop.entity.Product;
 import com.example.coffeeshop.service.ProductService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,4 +33,38 @@ public class ProductController {
                 .orElseGet(() -> ResponseEntity.notFound().build()
                 );
     }
+
+    @GetMapping("/api/products/{id}/image")
+    public ResponseEntity<byte[]> getProductImage(@PathVariable Long id)
+            throws IOException {
+
+        byte[] image = productService.getProductImage(id);
+        String contentType = productService.getProductImageContentType(id);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline")
+                .body(image);
+    }
+
+
+
+    @PostMapping(
+            value = "/api/products/{id}/image",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<Product> uploadProductImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+
+        Product product = productService.uploadProductImage(
+                id,
+                file.getBytes()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(product);
+    }
+
+
 }
