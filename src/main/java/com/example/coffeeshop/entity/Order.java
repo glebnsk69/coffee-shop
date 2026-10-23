@@ -56,7 +56,7 @@ public class Order {
     public void deleteOrder(){
         if(status!=OrderStatus.INPROGRESS && status!=OrderStatus.OPEN){
             deleted=true;
-        }else throw new IllegalStateException("Cannot complete an active order");
+        }else throw new IllegalStateException("Cannot delete an active order");
     }
     public void startOrder(){
         if(status==OrderStatus.OPEN) {

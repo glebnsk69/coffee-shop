@@ -12,7 +12,6 @@ public class CreateOrderRequest {
     public CreateOrderRequest(List<OrderItemRequest> items) {
         this.items = items;
     }
-
     public List<OrderItemRequest> getItems(){
         return items;
     }

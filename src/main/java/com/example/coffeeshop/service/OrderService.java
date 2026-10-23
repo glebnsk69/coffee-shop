@@ -65,7 +65,8 @@ public class OrderService {
         return orderRepository.findAllByDeletedFalse();
     }
     public Optional<Order> findOrderById(Long orderId){
-        return orderRepository.findById(orderId);
+
+        return orderRepository.findByIdAndDeletedFalse(orderId);//orderRepository.findById(orderId);
     }
     public List<OrderItem> getOrderItems(Long orderId){
         return orderItemRepository.findByOrder_Id(orderId);
