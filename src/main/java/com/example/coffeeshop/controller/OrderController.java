@@ -7,6 +7,7 @@ import com.example.coffeeshop.dto.OrderResponse;
 import com.example.coffeeshop.entity.Order;
 import com.example.coffeeshop.entity.OrderItem;
 import com.example.coffeeshop.service.OrderService;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,12 +27,21 @@ public class OrderController {
     public List<Order> getActiveOrders(){
         return orderService.getAllOrders();
     }
+
+    @Operation(
+            summary = "about - выводит название приложения и текущую версию",
+            description = "входных данных нет. выводит текст с информацией о приложении"
+    )
     @GetMapping("/api/about")
     public ResponseEntity<String> about(){
-        ResponseEntity response = new ResponseEntity<>("<H1>Hello WORLD!!!<H1>",HttpStatus.OK);
+        ResponseEntity response = new ResponseEntity<>("<center>><H1>CoffeeShop<H1><br><H2>Version 0.1 </center>",HttpStatus.OK);
         return response;//"<H1>Hello WORLD!!!<H1>";
     }
 
+    @Operation(
+            summary = "Поиск по номеру заказа",
+            description = "выводит заказ по номеру. Ошибку если заказ не найден или не активен"
+    )
     @GetMapping("/api/orders/{id}")
     public ResponseEntity<OrderResponse> findOrderById(@PathVariable Long id){
        Optional<Order> orderOptional = orderService.findOrderById(id).filter(order -> !order.isDeleted());
@@ -44,7 +54,10 @@ public class OrderController {
                 .map(item -> new OrderItemResponse(
                         item.getProduct().getId(),
                         item.getName(),
-                        item.getQuantity()
+                        item.getQuantity(),
+                        item.getCost(),
+                        item.getDiscount(),
+                        "/api/products/"+item.getId()+"/image"
                 ))
                 .toList();
         OrderResponse response = new OrderResponse(
@@ -67,7 +80,11 @@ public class OrderController {
                 .map(item -> new OrderItemResponse(
                         item.getProduct().getId(),
                         item.getName(),
-                        item.getQuantity()
+                        item.getQuantity(),
+                        item.getCost(),
+                        item.getDiscount(),
+                        "/api/products/" + item.getProduct().getId() + "/image"
+
                 ))
                 .toList();
 

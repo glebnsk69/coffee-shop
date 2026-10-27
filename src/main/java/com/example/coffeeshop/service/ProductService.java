@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,9 +14,12 @@ import java.util.Optional;
 public class ProductService {
     private final ProductRepository repository;
     private final ImageStorageService storageService;
-    public ProductService(ProductRepository repository,ImageStorageService storageService) {
+    private final NoImageProvider noImageProvider;
+
+    public ProductService(ProductRepository repository, ImageStorageService storageService, NoImageProvider noImageProvider) {
         this.storageService = storageService;
         this.repository = repository;
+        this.noImageProvider = noImageProvider;
     }
     /*
     public ProductService(ProductRepository repository) {
@@ -120,12 +124,14 @@ public class ProductService {
         String imagePath = product.getImagePath();
 
         if (imagePath == null || imagePath.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Product has no image: " + productId
-            );
+            return noImageProvider.getImageBytes();
         }
 
-        return storageService.loadImage(imagePath);
+        try {
+            return storageService.loadImage(imagePath);
+        } catch (NoSuchFileException e) {
+            return noImageProvider.getImageBytes();
+        }
     }
     public String getProductImageContentType(Long productId) {
         Product product = repository.findById(productId)
@@ -136,9 +142,12 @@ public class ProductService {
         String imagePath = product.getImagePath();
 
         if (imagePath == null || imagePath.isBlank()) {
-            throw new IllegalArgumentException("Product has no image: " + productId);
+            return "image/png";
         }
-
+        if (!java.nio.file.Files.exists(
+                java.nio.file.Path.of("data", "images", imagePath))) {
+            return "image/png";
+        }
         return storageService.getContentType(imagePath);
     }
 

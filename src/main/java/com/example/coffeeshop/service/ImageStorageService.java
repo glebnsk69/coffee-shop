@@ -41,7 +41,7 @@ public class ImageStorageService {
         }
 
         if (!Files.exists(filePath)) {
-            throw new IOException("Image file not found: " + fileName);
+            throw new java.nio.file.NoSuchFileException(filePath.toString());
         }
 
         return Files.readAllBytes(filePath);

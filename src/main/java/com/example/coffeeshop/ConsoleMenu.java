@@ -4,6 +4,7 @@ import com.example.coffeeshop.dto.OrderItemRequest;
 import com.example.coffeeshop.entity.Order;
 import com.example.coffeeshop.entity.OrderItem;
 import com.example.coffeeshop.repository.OrderItemRepository;
+import com.example.coffeeshop.service.UserService;
 import jakarta.annotation.Nonnull;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 import com.example.coffeeshop.service.OrderService;
+import com.example.coffeeshop.entity.Role;
 
 @Component
 public class ConsoleMenu {
@@ -19,8 +21,9 @@ public class ConsoleMenu {
     public static final String ANSI_RED = "\u001B[31m";
     public static final String ANSI_BLUE = "\u001B[34m";
 
-    public ConsoleMenu(OrderService orderService) {
+    public ConsoleMenu(OrderService orderService, UserService userService) {
         this.orderService = orderService;
+        this.userService = userService;
     }
     public void showMesssage(@Nonnull String message){
         int w = message.length();
@@ -30,6 +33,7 @@ public class ConsoleMenu {
     }
     enum CommandList {
         EXIT("Выход"),
+        CREATEUSER("Создать пользователя"),
         CREATEORDER("Создать заказ"),
         SHOWORDERSLIST("Показать список заказов"),
         SHOWORDER("Показать заказ"),
@@ -50,6 +54,7 @@ public class ConsoleMenu {
     }
     private final Scanner scanner = new Scanner(System.in);
     private final OrderService orderService;
+    private final UserService userService;
 
     public void showMenu(){
         showMesssage("Выберите действие:");
@@ -85,6 +90,7 @@ public class ConsoleMenu {
                 case SHOWORDER -> showOrder((long)readOrderId());
                 case SHOWORDERSLIST -> showOrderList();
                 case END -> changeOrderStatus((long)readOrderId(),CommandList.END);
+                case CREATEUSER -> createUser();
                 case EXIT -> isRunning=false;
             }
         }
@@ -209,4 +215,47 @@ public class ConsoleMenu {
         }
 
     }
+
+
+    private void createUser() {
+        System.out.print("Имя пользователя: ");
+        String username = scanner.nextLine().trim();
+
+        System.out.print("Пароль: ");
+        String password = scanner.nextLine();
+
+        Role[] roles = Role.values();
+
+        System.out.println("Выберите роль:");
+        for (int i = 0; i < roles.length; i++) {
+            System.out.printf("%d: %s%n", i + 1, roles[i]);
+        }
+
+        Role role;
+        while (true) {
+            System.out.print("Номер роли: ");
+            String input = scanner.nextLine().trim();
+
+            try {
+                int choice = Integer.parseInt(input);
+
+                if (choice >= 1 && choice <= roles.length) {
+                    role = roles[choice - 1];
+                    break;
+                }
+
+                System.out.println("Такого номера роли нет.");
+            } catch (NumberFormatException e) {
+                System.out.println("Введите номер числом.");
+            }
+        }
+
+        try {
+            userService.createUser(username, password, role);
+            System.out.println("Пользователь создан: " + username);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Ошибка создания пользователя: " + e.getMessage());
+        }
+    }
+
 }
