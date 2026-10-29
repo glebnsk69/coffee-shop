@@ -1,9 +1,6 @@
 package com.example.coffeeshop.controller;
 
-import com.example.coffeeshop.dto.ChangeOrderStatusRequest;
-import com.example.coffeeshop.dto.CreateOrderRequest;
-import com.example.coffeeshop.dto.OrderItemResponse;
-import com.example.coffeeshop.dto.OrderResponse;
+import com.example.coffeeshop.dto.*;
 import com.example.coffeeshop.entity.Order;
 import com.example.coffeeshop.entity.OrderItem;
 import com.example.coffeeshop.service.OrderService;
@@ -43,10 +40,13 @@ public class OrderController {
             description = "выводит заказ по номеру. Ошибку если заказ не найден или не активен"
     )
     @GetMapping("/api/orders/{id}")
-    public ResponseEntity<OrderResponse> findOrderById(@PathVariable Long id){
+    public ResponseEntity<?> findOrderById(@PathVariable Long id){
        Optional<Order> orderOptional = orderService.findOrderById(id).filter(order -> !order.isDeleted());
        if(orderOptional.isEmpty()) {
-           return ResponseEntity.notFound().build();
+           //return ResponseEntity.notFound().build();
+           return ResponseEntity
+                   .status(HttpStatus.NOT_FOUND)
+                   .body(new ApiError(404,"Not found","Заказ не найден"));
        }
         Order order = orderOptional.get();
         List<OrderItem> orderItems = orderService.getOrderItems(id);
@@ -57,7 +57,7 @@ public class OrderController {
                         item.getQuantity(),
                         item.getCost(),
                         item.getDiscount(),
-                        "/api/products/"+item.getId()+"/image"
+                        "/api/products/"+item.getProduct().getId()+"/image"
                 ))
                 .toList();
         OrderResponse response = new OrderResponse(
@@ -105,6 +105,11 @@ public class OrderController {
             @RequestBody ChangeOrderStatusRequest request) {
         orderService.changeOrderStatus(id,request.status());
         return ResponseEntity.ok().build();
+    }
+    @DeleteMapping("/api/orders/{id}")
+    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
+        orderService.deleteOrder(id);
+        return ResponseEntity.noContent().build();
     }
 }
 //Long productId, String productName, Integer quantity

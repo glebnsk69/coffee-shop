@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.example.coffeeshop.dto.ApiError;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,10 +28,16 @@ public class ProductController {
     }
 
     @GetMapping("/api/products/{id}")
-    public ResponseEntity<Product> findProductById(@PathVariable Long id){
+    public ResponseEntity<?> findProductById(@PathVariable Long id){
         return productService.findProductById(id)
-                .map(product -> ResponseEntity.ok(product))
-                .orElseGet(() -> ResponseEntity.notFound().build()
+                .<ResponseEntity<?>>map(product -> ResponseEntity.ok(product))
+                .orElseGet(() -> ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(new ApiError(
+                                404,
+                                "Not Found",
+                                "Товар не найден"
+                        ))
                 );
     }
 
