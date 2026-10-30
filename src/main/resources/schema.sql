@@ -49,5 +49,11 @@ CREATE TABLE IF NOT EXISTS users (
     CONSTRAINT chk_role
         CHECK (role IN ('ADMIN', 'CASHIER', 'GUEST')
         )
+);
+CREATE TABLE IF NOT EXISTS categories (
+    id NUMBER GENERATED ALWAYS AS IDENTITY,
+    name VARCHAR2(150) NOT NULL,
 
+    CONSTRAINT pk_categories PRIMARY KEY (id),
+    CONSTRAINT uq_categories_name UNIQUE (name)
 );
