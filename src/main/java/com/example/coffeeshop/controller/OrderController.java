@@ -41,7 +41,7 @@ public class OrderController {
     )
     @GetMapping("/api/orders/{id}")
     public ResponseEntity<?> findOrderById(@PathVariable Long id){
-       Optional<Order> orderOptional = orderService.findOrderById(id).filter(order -> !order.isDeleted());
+       Optional<Order> orderOptional = orderService.findOrderById(id);
        if(orderOptional.isEmpty()) {
            //return ResponseEntity.notFound().build();
            return ResponseEntity
@@ -71,7 +71,10 @@ public class OrderController {
 
     return ResponseEntity.ok(response);
     }
-
+    @Operation(
+            summary = "Вывод списка заказов",
+            description = "Список заказов в зависимости от роли"
+    )
     @PostMapping("/api/orders")
     public ResponseEntity<OrderResponse>  createOrder(@RequestBody CreateOrderRequest request){
         Order order = orderService.createOrder(request);
@@ -98,7 +101,10 @@ public class OrderController {
 
         return  ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-
+    @Operation(
+            summary = "Получение статуса заказа",
+            description = "выводит статус заказа по номеру. Ошибку если заказ не найден или не активен"
+    )
     @PatchMapping("/api/orders/{id}/status")
     public ResponseEntity<Void> changeOrderStatus(
             @PathVariable Long id,
@@ -106,10 +112,6 @@ public class OrderController {
         orderService.changeOrderStatus(id,request.status());
         return ResponseEntity.ok().build();
     }
-    @DeleteMapping("/api/orders/{id}")
-    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
-        orderService.deleteOrder(id);
-        return ResponseEntity.noContent().build();
-    }
+
 }
 //Long productId, String productName, Integer quantity

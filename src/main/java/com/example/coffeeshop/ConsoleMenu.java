@@ -3,6 +3,7 @@ import com.example.coffeeshop.dto.CreateOrderRequest;
 import com.example.coffeeshop.dto.OrderItemRequest;
 import com.example.coffeeshop.entity.Order;
 import com.example.coffeeshop.entity.OrderItem;
+import com.example.coffeeshop.entity.OrderStatus;
 import com.example.coffeeshop.repository.OrderItemRepository;
 import com.example.coffeeshop.service.UserService;
 import jakarta.annotation.Nonnull;
@@ -184,7 +185,7 @@ public class ConsoleMenu {
             System.out.println("Заказ не найден");
             return;
         }
-        if(order.get().isDeleted()) System.out.println("Заказ Удален.");
+        if(order.get().isInvalid()) System.out.println("Заказ Удален.");
         else showMesssage(order.get().StringForPrint());
 
         orderService.getOrderItems(orderID).forEach(orderItem -> System.out.println(orderItem.getStringForPrint()));
@@ -197,13 +198,13 @@ public class ConsoleMenu {
             return;
         }
 
-        if(order.get().isDeleted()) System.out.println("Заказ Удален.");
+        if(order.get().isInvalid()) System.out.println("Заказ Удален.");
         else {
             showMesssage(order.get().StringForPrint());
             try {
                 switch (status){
                     case END -> orderService.completeOrder(orderID);
-                    case DELETE -> orderService.deleteOrder(orderID);
+                    case DELETE -> orderService.changeOrderStatus(orderID, OrderStatus.INVALID);
                     case CANCEL -> orderService.cancelOrder(orderID);
                     case START -> orderService.startOrder(orderID);
                 }

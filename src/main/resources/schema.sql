@@ -16,9 +16,8 @@ CREATE TABLE IF NOT EXISTS orders (
     order_status VARCHAR(255) NOT NULL,
     created_at TIMESTAMP  NOT NULL,
     duration BIGINT,
-    deleted BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT chk_order_status
-        CHECK (order_status IN ('OPEN', 'INPROGRESS', 'COMPLETED', 'CANCELLED')
+        CHECK (order_status IN ('OPEN', 'INPROGRESS', 'COMPLETED', 'CANCELLED','READY','INVALID')
         )
 );
 

@@ -51,25 +51,33 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/h2-console/**"
                         ).permitAll()
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.POST,
+                                "/api/orders"
+                        ).hasAnyRole("CASHIER", "ADMIN")
+
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.PATCH,
+                                "/api/orders/*/status"
+                        ).hasAnyRole("CASHIER", "ADMIN")
                         // Просмотр каталога и изображений доступен всем ролям
                         .requestMatchers(
                                 org.springframework.http.HttpMethod.GET,
                                 "/api/products",
                                 "/api/products/*",
                                 "/api/products/*/image"
-                        ).hasAnyRole("GUEST", "CASHIER", "ADMIN")
+                        ).permitAll() //hasAnyRole("GUEST", "CASHIER", "ADMIN")
                         // Загрузка изображения — только администратор
                         .requestMatchers(
                                 org.springframework.http.HttpMethod.POST,
                                 "/api/products/*/image"
                         ).hasRole("ADMIN")
-// Удаление заказк — только администратор
-                        .requestMatchers(
-                                org.springframework.http.HttpMethod.DELETE,
-                                "/api/orders/*"
-                        ).hasRole("ADMIN")
-
-
+                                // Публичное чтение заказов
+                                .requestMatchers(
+                                        org.springframework.http.HttpMethod.GET,
+                                        "/api/orders",
+                                        "/api/orders/*"
+                                ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptions -> exceptions

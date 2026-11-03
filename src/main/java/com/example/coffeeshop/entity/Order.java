@@ -18,8 +18,6 @@ public class Order {
     private LocalDateTime createdAt;
     @Column(name = "duration")
     private Long durationSeconds;
-    @Column(name = "deleted",nullable = false)
-    private boolean deleted = false;
     public Long getId() {
         return id;
     }
@@ -32,31 +30,54 @@ public class Order {
     public Long getDurationSeconds() {
         return durationSeconds;
     }
-    public boolean isDeleted() {
-        return deleted;
+
+    public boolean isInvalid() {
+        if(status==OrderStatus.INVALID) return true;
+        else return false;
+    }
+
+    public void readyOrder() {
+        if (status == OrderStatus.INPROGRESS) {
+            status = OrderStatus.READY;
+        } else {
+            throw new IllegalStateException(
+                    "Only an order in progress can be marked as ready");
+        }
+    }
+
+    public void restoreOrder(OrderStatus newStatus) {
+        if (status != OrderStatus.INVALID
+                || newStatus == null
+                || newStatus == OrderStatus.INVALID) {
+            throw new IllegalStateException("Invalid order restoration");
+        }
+
+        status = newStatus;
+    }
+
+    public void markAsInvalid(){
+        if(status!=OrderStatus.INVALID){
+            status = OrderStatus.INVALID;
+        }else throw new IllegalStateException("Order is already invalid");
     }
     public Order() {
         status = OrderStatus.OPEN;
         createdAt = LocalDateTime.now();
-        deleted = false;
     }
+
     public void completeOrder(){
-        if(status==OrderStatus.INPROGRESS){
+        if(status==OrderStatus.READY){
             status = OrderStatus.COMPLETED;
             durationSeconds = ChronoUnit.SECONDS.between(createdAt,LocalDateTime.now());
         }
         else throw new IllegalStateException("Cannot complete an inactive order");
     }
+
     public void cancelOrder(){
         if(status==OrderStatus.OPEN ){
             status = OrderStatus.CANCELLED;
             durationSeconds = ChronoUnit.SECONDS.between(createdAt,LocalDateTime.now());
         } else throw new IllegalStateException("Only an open order can be cancelled");
-    }
-    public void deleteOrder(){
-        if(status!=OrderStatus.INPROGRESS && status!=OrderStatus.OPEN){
-            deleted=true;
-        }else throw new IllegalStateException("Cannot delete an active order");
     }
     public void startOrder(){
         if(status==OrderStatus.OPEN) {
@@ -65,6 +86,6 @@ public class Order {
         else throw new IllegalStateException("Only open orders can be accepted for processing");
     }
     public String StringForPrint(){
-        return String.valueOf(id)+": "+status+", "+createdAt+((deleted==true)?"(удален)":"");
+        return String.valueOf(id)+": "+status+", "+createdAt+((status==OrderStatus.INVALID)?"(удален)":"");
     }
 }

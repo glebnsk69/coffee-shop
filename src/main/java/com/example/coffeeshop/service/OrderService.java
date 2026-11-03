@@ -10,6 +10,8 @@ import com.example.coffeeshop.repository.OrderItemRepository;
 import com.example.coffeeshop.repository.OrderRepository;
 import com.example.coffeeshop.repository.ProductRepository;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.Authentication;
@@ -44,6 +46,7 @@ public class OrderService {
                         new IllegalStateException("Роль пользователя не найдена"));
     }
 
+
     public OrderService(OrderRepository orderRepository, ProductRepository productRepository, OrderItemRepository orderItemRepository) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
@@ -51,6 +54,12 @@ public class OrderService {
     }
     @Transactional
     public Order createOrder(CreateOrderRequest request){
+        String role = getCurrentUserRole();
+
+        if (!"CASHIER".equals(role) && !"ADMIN".equals(role)) {
+            throw new AccessDeniedException("Недостаточно прав для создания заказа");
+        }
+
         if(request==null||request.getItems()==null
                 || request.getItems().isEmpty()) throw new IllegalArgumentException("Order request must contain at least one item");
 
@@ -81,13 +90,55 @@ public class OrderService {
 
         return order;
     }
-    public List<Order> getAllOrders(){
-        return orderRepository.findAllByDeletedFalse();
-    }
-    public Optional<Order> findOrderById(Long orderId){
+    private boolean isAnonymous() {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
 
-        return orderRepository.findByIdAndDeletedFalse(orderId);//orderRepository.findById(orderId);
+        return authentication == null
+                || authentication instanceof AnonymousAuthenticationToken;
     }
+    public List<Order> getAllOrders() {
+        if (isAnonymous()) {
+            return orderRepository.findAllByStatusIn(
+                    List.of(
+                            OrderStatus.OPEN,
+                            OrderStatus.INPROGRESS,
+                            OrderStatus.READY
+                    )
+            );
+        }
+
+        String role = getCurrentUserRole();
+
+        if ("CASHIER".equals(role) || "ADMIN".equals(role)) {
+            return orderRepository.findAll();
+        }
+
+        throw new AccessDeniedException("Недостаточно прав");
+    }
+
+
+    public Optional<Order> findOrderById(Long orderId) {
+        if (isAnonymous()) {
+            return orderRepository.findByIdAndStatusIn(
+                    orderId,
+                    List.of(
+                            OrderStatus.OPEN,
+                            OrderStatus.INPROGRESS,
+                            OrderStatus.READY
+                    )
+            );
+        }
+
+        String role = getCurrentUserRole();
+
+        if ("CASHIER".equals(role) || "ADMIN".equals(role)) {
+            return orderRepository.findById(orderId);
+        }
+
+        throw new AccessDeniedException("Недостаточно прав");
+    }
+
     public List<OrderItem> getOrderItems(Long orderId){
         return orderItemRepository.findByOrder_Id(orderId);
     }
@@ -105,51 +156,61 @@ public class OrderService {
     }
 
     @Transactional
-    public void deleteOrder(Long orderId) {
-        String role = getCurrentUserRole();
-
-        if (!"ADMIN".equals(role)) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "Удалять заказы может только администратор");
-        }
-
-        Order order = findOrderById(orderId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Заказ не найден"));
-
-        order.deleteOrder();
-    }
-
-
-    @Transactional
     public void changeOrderStatus(Long orderId, OrderStatus newStatus) {
         String role = getCurrentUserRole();
 
-        if ("GUEST".equals(role)) {
-            throw new org.springframework.security.access.AccessDeniedException(
-                    "Гостю запрещено изменять статус заказа");
+        if (!"CASHIER".equals(role) && !"ADMIN".equals(role)) {
+            throw new AccessDeniedException(
+                    "Недостаточно прав для изменения статуса заказа"
+            );
         }
 
         Order order = findOrderById(orderId)
                 .orElseThrow(() ->
                         new IllegalArgumentException("Заказ не найден"));
+
+        if (newStatus == null) {
+            throw new IllegalArgumentException("Статус не может быть null");
+        }
+
+        if (newStatus == OrderStatus.INVALID) {
+            if ("CASHIER".equals(role)
+                    && order.getStatus() != OrderStatus.OPEN) {
+                throw new AccessDeniedException(
+                        "Кассир может пометить как INVALID только открытый заказ"
+                );
+            }
+
+            order.markAsInvalid();
+            return;
+        }
+
+        if (order.getStatus() == OrderStatus.INVALID) {
+            if (!"ADMIN".equals(role)) {
+                throw new AccessDeniedException(
+                        "Только администратор может восстановить заказ"
+                );
+            }
+
+            order.restoreOrder(newStatus);
+            return;
+        }
 
         switch (newStatus) {
             case INPROGRESS -> order.startOrder();
 
+            case READY -> order.readyOrder();
+
             case COMPLETED -> order.completeOrder();
 
-            case CANCELLED -> {
-                if ("ADMIN".equals(role)
-                        && order.getStatus() == OrderStatus.INPROGRESS) {
-                    throw new IllegalStateException(
-                            "Администратор не может отменить заказ в обработке");
-                }
-                order.cancelOrder();
-            }
+            case CANCELLED -> order.cancelOrder();
 
-            default -> throw new IllegalArgumentException("Ошибка в статусе");
+            default -> throw new IllegalArgumentException(
+                    "Недопустимый переход статуса"
+            );
         }
     }
+
+
 
 }
