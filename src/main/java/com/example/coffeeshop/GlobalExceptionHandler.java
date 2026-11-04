@@ -4,6 +4,7 @@ package com.example.coffeeshop;
 import com.example.coffeeshop.dto.ApiError;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -35,4 +36,20 @@ public class GlobalExceptionHandler {
                         e.getMessage()
                 ));
     }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(
+            AccessDeniedException e) {
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(new ApiError(
+                        403,
+                        "Forbidden",
+                        e.getMessage()
+                ));
+    }
+
+
+
 }
