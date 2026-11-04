@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
+@RequestMapping("/api/orders")
 public class OrderController {
     private final OrderService orderService;
 
@@ -20,7 +21,8 @@ public class OrderController {
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
     }
-    @GetMapping("/api/orders")
+    //@GetMapping("/api/orders")
+    @GetMapping
     public List<Order> getActiveOrders(){
         return orderService.getAllOrders();
     }
@@ -39,7 +41,7 @@ public class OrderController {
             summary = "Поиск по номеру заказа",
             description = "выводит заказ по номеру. Ошибку если заказ не найден или не активен"
     )
-    @GetMapping("/api/orders/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<?> findOrderById(@PathVariable Long id){
        Optional<Order> orderOptional = orderService.findOrderById(id);
        if(orderOptional.isEmpty()) {
@@ -63,6 +65,7 @@ public class OrderController {
         OrderResponse response = new OrderResponse(
                 order.getId(),
                 order.getStatus(),
+                order.getStatus().getDisplayName(),
                 order.getCreatedAt(),
                 order.getDurationSeconds(),
                 items
@@ -75,7 +78,7 @@ public class OrderController {
             summary = "Вывод списка заказов",
             description = "Список заказов в зависимости от роли"
     )
-    @PostMapping("/api/orders")
+    @PostMapping
     public ResponseEntity<OrderResponse>  createOrder(@RequestBody CreateOrderRequest request){
         Order order = orderService.createOrder(request);
 
@@ -94,6 +97,7 @@ public class OrderController {
         OrderResponse response = new OrderResponse(
                 order.getId(),
                 order.getStatus(),
+                order.getStatus().getDisplayName(),
                 order.getCreatedAt(),
                 order.getDurationSeconds(),
                 items
@@ -105,12 +109,21 @@ public class OrderController {
             summary = "Получение статуса заказа",
             description = "выводит статус заказа по номеру. Ошибку если заказ не найден или не активен"
     )
-    @PatchMapping("/api/orders/{id}/status")
+    @PatchMapping("/{id}/status")
     public ResponseEntity<Void> changeOrderStatus(
             @PathVariable Long id,
             @RequestBody ChangeOrderStatusRequest request) {
         orderService.changeOrderStatus(id,request.status());
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{id}/available-statuses")
+    public ResponseEntity<List<OrderStatusOption>> getAvailableStatuses(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(
+                orderService.getAvailableStatuses(id)
+        );
     }
 
 }

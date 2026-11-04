@@ -44,6 +44,21 @@ public class Order {
                     "Only an order in progress can be marked as ready");
         }
     }
+    public void changeStatusByAdmin(OrderStatus newStatus) {
+        if (newStatus == null || newStatus == OrderStatus.INVALID) {
+            throw new IllegalArgumentException("Недопустимый статус");
+        }
+
+        status = newStatus;
+
+        if (newStatus == OrderStatus.COMPLETED
+                || newStatus == OrderStatus.CANCELLED) {
+            durationSeconds = ChronoUnit.SECONDS.between(
+                    createdAt,
+                    LocalDateTime.now()
+            );
+        }
+    }
 
     public void restoreOrder(OrderStatus newStatus) {
         if (status != OrderStatus.INVALID

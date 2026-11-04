@@ -18,6 +18,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.ArrayList;
+import java.util.List;
+import com.example.coffeeshop.dto.OrderStatusOption;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -180,10 +184,10 @@ public class OrderService {
                         "Кассир может пометить как INVALID только открытый заказ"
                 );
             }
-
             order.markAsInvalid();
             return;
         }
+
 
         if (order.getStatus() == OrderStatus.INVALID) {
             if (!"ADMIN".equals(role)) {
@@ -196,6 +200,10 @@ public class OrderService {
             return;
         }
 
+        if ("ADMIN".equals(role)) {
+            order.changeStatusByAdmin(newStatus);
+            return;
+        }
         switch (newStatus) {
             case INPROGRESS -> order.startOrder();
 
@@ -211,6 +219,56 @@ public class OrderService {
         }
     }
 
+    public List<OrderStatusOption> getAvailableStatuses(Long orderId) {
+        String role = getCurrentUserRole();
+
+        Order order = findOrderById(orderId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Заказ не найден"));
+
+        OrderStatus currentStatus = order.getStatus();
+
+        List<OrderStatus> availableStatuses = new ArrayList<>();
+
+        if ("ADMIN".equals(role)) {
+            if (currentStatus == OrderStatus.INVALID) {
+                availableStatuses.addAll(List.of(
+                        OrderStatus.OPEN,
+                        OrderStatus.INPROGRESS,
+                        OrderStatus.READY,
+                        OrderStatus.COMPLETED,
+                        OrderStatus.CANCELLED
+                ));
+            } else {
+                availableStatuses.addAll(List.of(
+                        OrderStatus.OPEN,
+                        OrderStatus.INPROGRESS,
+                        OrderStatus.READY,
+                        OrderStatus.COMPLETED,
+                        OrderStatus.CANCELLED
+                ));
+                availableStatuses.remove(currentStatus);
+            }
+        } else if ("CASHIER".equals(role)) {
+            switch (currentStatus) {
+                case OPEN -> availableStatuses.addAll(List.of(
+                        OrderStatus.INPROGRESS,
+                        OrderStatus.CANCELLED
+                ));
+                case INPROGRESS -> availableStatuses.add(OrderStatus.READY);
+                case READY -> availableStatuses.add(OrderStatus.COMPLETED);
+                default -> {
+                }
+            }
+        }
+
+        return availableStatuses.stream()
+                .map(status -> new OrderStatusOption(
+                        status,
+                        status.getDisplayName()
+                ))
+                .toList();
+    }
 
 
 }

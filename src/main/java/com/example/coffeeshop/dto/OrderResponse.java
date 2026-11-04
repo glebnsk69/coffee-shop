@@ -8,6 +8,7 @@ import java.util.List;
 public record OrderResponse(
         Long id,
         OrderStatus status,
+        String statusName,
         LocalDateTime createdAt,
         Long durationSeconds,
         List<OrderItemResponse> items
